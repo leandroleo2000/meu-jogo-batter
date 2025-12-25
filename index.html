@@ -9,7 +9,7 @@
 
 body { 
     /* A mágica começa aqui: fundo fixo e centralizado */
-    background: url('img/fundo.png') no-repeat center center fixed; 
+    background: url('fundo.png') no-repeat center center fixed; 
     background-size: cover; 
      font-family: 'Orbitron', sans-serif; 
     color: white; 
@@ -171,7 +171,7 @@ body {
 
         <div class="hero-section">
            <!-- <div class="hero-glow"></div>
-            <img src="img/monster_fast.png" class="hero-img"> -->
+            <img src="monster_fast.png" class="hero-img"> -->
             <button class="btn-play-modern" onclick="iniciarJogo()">
                 JOGAR AGORA
                 <span class="btn-sub">ARENA PRINCIPAL</span>
@@ -237,11 +237,11 @@ let floatingTexts = [];
 
 // --- 1. CONFIGURAÇÕES E ATIVOS ---
 const playerImg = new Image();
-playerImg.src = "img/monster_fast.png"; 
+playerImg.src = "monster_fast.png"; 
 const botSprite = new Image();
-botSprite.src = "img/monster_bot.png";
+botSprite.src = "monster_bot.png";
 const backgroundImg = new Image();
-backgroundImg.src = "img/ny_destruida.png";
+backgroundImg.src = "ny_destruida.png";
 
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
@@ -374,10 +374,10 @@ function disparar(quem, targetX, targetY, dono) {
 }
 
 // --- 6. SONS (Atualizado com Jato) ---
-const audioShot = new Audio("sounds/shoot.mp3"); 
-const audioHit = new Audio("sounds/hit.mp3");   
-const audioBoss = new Audio("sounds/levelup.mp3"); 
-const audioJetpack = new Audio("sounds/jetpack.mp3"); // <--- NOVO SOM
+const audioShot = new Audio("shoot.mp3"); 
+const audioHit = new Audio("hit.mp3");   
+const audioBoss = new Audio("levelup.mp3"); 
+const audioJetpack = new Audio("jetpack.mp3"); // <--- NOVO SOM
 
 // Configurações do Jato
 audioJetpack.loop = true; // Faz o som repetir sem parar

@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>BATTLE PAINTBALL - ELITE EDITION</title>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+body { 
+    /* A mágica começa aqui: fundo fixo e centralizado */
+    background: url('img/fundo.png') no-repeat center center fixed; 
+    background-size: cover; 
+     font-family: 'Orbitron', sans-serif; 
+    color: white; 
+}
+
+/* --- TELA INICIAL (SPLASH) --- */
+#splashScreen {
+    position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; z-index: 2000;
+    background: linear-gradient(-45deg, red, red, #3300ff); 
+    background-size: 400% 400%; animation: gradientBG 15s ease infinite;
+}
+@keyframes gradientBG { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+#gameTitle { font-family: 'Bebas Neue'; font-size: 140px; text-shadow: 0 0 30px rgba(255,255,255,0.5); text-align: center; line-height: 0.9; }
+
+/* --- MENU PRINCIPAL MODERNO --- */
+#mainMenu { 
+    position: fixed; inset: 0; 
+    display: none; 
+    /* IMPORTANTE: Deixamos o fundo transparente para ver o fundo.png do body */
+   
+    flex-direction: column; 
+    z-index: 1000; 
+}
+
+.header { 
+    width: 100%; height: 70px; 
+    background: rgba(20, 25, 35, 0.7); /* Efeito de vidro */
+    display: flex; align-items: center; justify-content: space-between; 
+    padding: 0 40px; border-bottom: 1px solid rgba(0, 255, 204, 0.2); 
+    backdrop-filter: blur(10px);
+}
+
+.menu-layout {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 0 60px; height: calc(100vh - 70px);
+}
+
+/* Sidebar Esquerda */
+.nav-sidebar { display: flex; flex-direction: column; gap: 20px; }
+.nav-card {
+    width: 90px; height: 90px; 
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 18px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    cursor: pointer; transition: 0.3s; font-size: 10px;
+    backdrop-filter: blur(5px);
+}
+.nav-card:hover { background: rgba(0, 255, 204, 0.15); border-color: #00ffcc; transform: translateX(10px); }
+.nav-icon { font-size: 28px; margin-bottom: 5px; }
+
+/* Centro (Hero Section) - Ajustado para a Pedra */
+.hero-section { 
+    flex: 1; display: flex; flex-direction: column; 
+    align-items: center; justify-content: center; 
+    position: relative;
+    margin-top: 50px; /* Ajusta a altura do dragão em relação à pedra */
+}
+
+.hero-img { 
+    width: 400px; 
+    filter: drop-shadow(0 0 30px rgba(0, 255, 204, 0.4));
+    animation: floatAnim 4s ease-in-out infinite; 
+}
+
+@keyframes floatAnim { 
+    0%, 100% { transform: translateY(0); } 
+    50% { transform: translateY(-20px); } 
+}
+
+/* Sombra na pedra */
+.hero-glow { 
+    position: absolute; width: 200px; height: 40px; 
+    background: rgba(0, 0, 0, 0.4); filter: blur(15px); 
+    bottom: 140px; border-radius: 50%; z-index: -1; 
+}
+
+.btn-play-modern {
+    background: linear-gradient(90deg, #ff0055, #ff00aa); border: none; color: white;
+    padding: 18px 70px; font-family: 'Bebas Neue'; font-size: 38px; border-radius: 12px;
+    cursor: pointer; box-shadow: 0 10px 30px rgba(255, 0, 85, 0.3); transition: 0.3s; 
+    margin-top: 20px;
+}
+.btn-play-modern:hover { transform: scale(1.05); box-shadow: 0 0 50px rgba(255, 0, 85, 0.6); }
+
+/* Sidebar Direita */
+.stats-sidebar { width: 280px; }
+.mini-card {
+    background: rgba(0, 0, 0, 0.5); border-left: 4px solid #00ffcc;
+    padding: 20px; border-radius: 0 12px 12px 0; margin-bottom: 20px;
+    backdrop-filter: blur(5px);
+}
+.card-tag { font-size: 10px; color: #888; margin-bottom: 5px; }
+.card-main { font-family: 'Bebas Neue'; font-size: 26px; color: #fff; }
+.progress-bg { width: 100%; height: 6px; background: #222; border-radius: 3px; margin-top: 10px; }
+.progress-fill { height: 100%; background: #00ffcc; border-radius: 3px; }
+
+/* --- ARENA E HUD --- */
+#gameContainer { position: fixed; inset: 0; display: none; background: #fff; }
+#gameHUD { 
+    position: absolute; top: 20px; width: 100%; display: flex; 
+    justify-content: space-around; pointer-events: none; 
+    font-size: 18px; text-shadow: 1px 1px 5px #000; 
+}
+
+/* Container das luzes */
+.light-particles {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none; /* Para você conseguir clicar nos botões */
+    z-index: 1; /* Fica acima do fundo, mas abaixo do menu */
+    overflow: hidden;
+}
+
+
+
+#mainMenu {
+    position: fixed;
+    inset: 0;
+    display: none;
+    background: rgba(0, 0, 0, 0.1); /* Quase transparente */
+    z-index: 1000; /* Garante que o menu fique na frente das luzes */
+    flex-direction: column;
+}
+
+	
+	</style>
+</head>
+<body>
+
+
+	
+	<div id="arena"></div>
+
+<div id="splashScreen">
+    <div id="splashContent">
+        <h1 id="gameTitle">BATTLE <span style="color:#ffffff">FIRE</span></h1>
+        <button onclick="irParaMenu()" style="margin-top:30px; padding: 20px 60px; background: #fff; color: #000; border: none; font-family: 'Orbitron'; font-weight: bold; border-radius: 50px; cursor: pointer; transition: 0.3s;">ENTRAR NA ARENA</button>
+    </div>
+</div>
+
+<div id="mainMenu">
+    <div class="header">
+        <div class="user-info">
+            <div style="width:40px; height:40px; background: linear-gradient(45deg, #00ffcc, #3300ff); border-radius:12px; border: 2px solid #fff;"></div>
+            <div>CAPITÃO <br> <span style="font-size:10px; color:#00ffcc">NÍVEL 0</span></div>
+        </div>
+        <div class="currency-bar">
+            <span style="color:#ffd700">💰 1.500</span>
+            <span style="color:#00ffcc; margin-left: 15px;">💎 50</span>
+        </div>
+       
+    </div>
+
+    <div class="menu-layout">
+       
+
+        <div class="hero-section">
+           <!-- <div class="hero-glow"></div>
+            <img src="img/monster_fast.png" class="hero-img"> -->
+            <button class="btn-play-modern" onclick="iniciarJogo()">
+                JOGAR AGORA
+                <span class="btn-sub">ARENA PRINCIPAL</span>
+            </button>
+        </div>
+
+        <div class="stats-sidebar">
+            <div class="mini-card">
+                <p class="card-tag">MISSÃO ATIVA</p>
+                <p class="card-main">MATE 50 BOTS</p>
+                <div class="progress-bg"><div class="progress-fill" style="width: 40%;"></div></div>
+            </div>
+            <div class="mini-card" style="border-left-color: #ff0055;">
+                <p class="card-tag">EQUIPADO</p>
+                <p class="card-main" style="color: #ff0055;">DINO-SPLASH</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="gameContainer">
+    <div id="gameHUD">
+        <div style="color: #00ffcc">AMMO: <span id="ammoTxt">15</span></div>
+        <div id="heartContainer" style="font-size: 25px; letter-spacing: 5px;"></div>
+        <div style="color: #ff0055">BOT: ALIVE</div>
+        <div style="color: #fff">ESC para Sair</div>
+    </div>
+    <canvas id="gameCanvas"></canvas>
+</div>
+
+<div id="continueModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.95); z-index:5000; align-items:center; justify-content:center; text-align:center;">
+    <div style="background:#1c2431; padding:40px; border-radius:20px; border:2px solid #ffd700; max-width:400px;">
+        <h2 style="font-family:'Bebas Neue'; font-size:50px; color:#ff0055;">FIM DE JOGO!</h2>
+        <button id="btnAnuncio" onclick="assistirAnuncio()" style="background:#ffd700; color:#000; border:none; padding:15px 30px; font-weight:bold; border-radius:5px; cursor:pointer; width:100%; margin-top:20px;">
+            🎬 ASSISTIR PARA REVIVER
+        </button>
+        <button onclick="location.reload()" style="background:transparent; border:none; color:#666; margin-top:20px; cursor:pointer; text-decoration:underline;">Recomeçar</button>
+    </div>
+</div>
+	
+
+<div id="customModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.9); z-index:3000; align-items:center; justify-content:center;">
+    <div style="background:#1c2431; width:80%; max-width:600px; padding:30px; border:2px solid #ff00cc; border-radius:20px; position:relative;">
+        <button onclick="fecharCustom()" style="position:absolute; top:15px; right:15px; background:none; border:none; color:#fff; font-size:30px; cursor:pointer;">&times;</button>
+        <h2 style="color:#ff00cc; font-family:'Bebas Neue'; font-size:40px;">SKINS</h2>
+        <p>Escolha sua pintura...</p>
+    </div>
+</div>
+<script>
+let powerUps = [];
+let activePowerUp = null; 
+let powerUpTimer = 0;
+let playerLives = 10;
+let deathCount = 2; 
+
+// --- MISSÕES ---
+let missions = {
+    kills: { goal: 50, current: 0, reward: 1000, desc: "Mate 50 bots", active: true },
+    survival: { goal: 180, current: 0, reward: 2000, desc: "Sobreviva 3 min", active: true }
+};
+let survivalStartTime = Date.now();
+let floatingTexts = []; 
+
+// --- 1. CONFIGURAÇÕES E ATIVOS ---
+const playerImg = new Image();
+playerImg.src = "img/monster_fast.png"; 
+const botSprite = new Image();
+botSprite.src = "img/monster_bot.png";
+const backgroundImg = new Image();
+backgroundImg.src = "img/ny_destruida.png";
+
+const canvas = document.getElementById("gameCanvas");
+const ctx = canvas.getContext("2d");
+const paintCanvas = document.createElement('canvas');
+const pCtx = paintCanvas.getContext('2d');
+
+let gameRunning = false;
+
+// --- 2. VARIÁVEIS DE JOGO ---
+let level = 1;
+let bots = [];
+let bullets = [];
+let particles = [];
+let keys = {};
+let mousePos = { x: 0, y: 0 };
+let isBossLevel = false;
+
+let player = { 
+    x: 150, 
+    y: 300, 
+    r: 60,  
+    color: "#00ffcc", 
+    ammo: 30, 
+    maxAmmo: 30,
+    reloading: false, 
+    angle: 0, 
+    speed: 7 
+};
+
+function resizeCanvas() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    paintCanvas.width = canvas.width;
+    paintCanvas.height = canvas.height;
+}
+
+// --- 3. LÓGICA DE SPAWN ---
+function spawnWave() {
+    bots = [];
+    isBossLevel = (level % 5 === 0);
+    const botCount = Math.min(1 + Math.floor(level / 2), 8);
+    const botSpeed = Math.min(1.2 + level * 0.15, 4);
+
+    if(isBossLevel){
+        bots.push({
+            x: canvas.width - 200,
+            y: canvas.height / 2,
+            r: 150, 
+            hp: 6 + level * 2,
+            speed: botSpeed * 0.8,
+            isBoss: true,
+            alive: true,
+            lastShot: 0
+        });
+    } else {
+        for(let i=0;i<botCount;i++){
+            bots.push({
+                x: canvas.width + Math.random()*300,
+                y: Math.random()*canvas.height,
+                r: 80, 
+                hp:1,
+                speed:botSpeed,
+                isBoss:false,
+                alive:true,
+                lastShot:0
+            });
+        }
+    }
+}
+
+function irParaMenu() {
+    document.getElementById('splashScreen').style.display = 'none';
+    document.getElementById('mainMenu').style.display = 'flex';
+}
+
+function iniciarJogo() {
+    gameRunning = true;
+    level = 1;
+    playerLives = 10; 
+    powerUps = []; 
+    activePowerUp = null;
+    survivalStartTime = Date.now();
+    document.getElementById('mainMenu').style.display = 'none';
+    document.getElementById('gameContainer').style.display = 'block';
+    resizeCanvas();
+    pCtx.clearRect(0, 0, paintCanvas.width, paintCanvas.height);
+    player.x = 150; player.y = canvas.height / 2;
+    player.ammo = player.maxAmmo;
+    bullets = [];
+    spawnWave();
+    atualizarCoracoes(); 
+    requestAnimationFrame(gameLoop);
+}
+
+function criarParticulas(x, y, color) {
+    for(let i=0; i<10; i++) {
+        particles.push({
+            x: x, y: y,
+            vx: (Math.random()-0.5) * 10,
+            vy: (Math.random()-0.5) * 10,
+            life: 1.0, color: color
+        });
+    }
+}
+
+function criarTextoFlutuante(x, y, texto, cor) {
+    floatingTexts.push({ x, y, texto, cor, alpha: 1.0, yOffset: 0 });
+}
+
+function criarMancha(x, y, color) {
+    pCtx.fillStyle = color;
+    pCtx.globalAlpha = 0.4;
+    pCtx.beginPath();
+    pCtx.arc(x, y, 30 + Math.random()*20, 0, Math.PI*2);
+    pCtx.fill();
+    pCtx.globalAlpha = 1.0;
+}
+
+function disparar(quem, targetX, targetY, dono) {
+    let ang = Math.atan2(targetY - quem.y, targetX - quem.x);
+    let bulletColor = (dono === 'player' ? player.color : "red");
+    if(dono === 'player' && activePowerUp === 'laser') bulletColor = "#fffb00";
+
+    bullets.push({
+        x: quem.x, y: quem.y,
+        vx: Math.cos(ang) * (activePowerUp === 'laser' ? 25 : 15),
+        vy: Math.sin(ang) * (activePowerUp === 'laser' ? 25 : 15),
+        owner: dono, color: bulletColor
+    });
+}
+
+// --- 6. SONS (Atualizado com Jato) ---
+const audioShot = new Audio("sounds/shoot.mp3"); 
+const audioHit = new Audio("sounds/hit.mp3");   
+const audioBoss = new Audio("sounds/levelup.mp3"); 
+const audioJetpack = new Audio("sounds/jetpack.mp3"); // <--- NOVO SOM
+
+// Configurações do Jato
+audioJetpack.loop = true; // Faz o som repetir sem parar
+audioJetpack.volume = 0.3; // Volume um pouco mais baixo para não irritar
+
+function playSound(audio){
+    audio.currentTime = 0;
+    audio.play().catch(e => console.log("Erro som:", e));
+}
+
+// --- CONTROLE DO SOM DO JATO ---
+function atualizarSomJato() {
+    // Se alguma tecla de movimento estiver pressionada e o jogo estiver rodando
+    if (gameRunning && (keys['w'] || keys['s'] || keys['a'] || keys['d'])) {
+        if (audioJetpack.paused) {
+            audioJetpack.play().catch(e => {});
+        }
+    } else {
+        audioJetpack.pause();
+        audioJetpack.currentTime = 0; // Reseta o som quando para
+    }
+}
+
+// --- EVENTOS (Atualizado para o som) ---
+window.addEventListener("keydown", e => {
+    keys[e.key.toLowerCase()] = true;
+    atualizarSomJato(); // Tenta tocar o som ao apertar
+});
+
+window.addEventListener("keyup", e => {
+    keys[e.key.toLowerCase()] = false;
+    atualizarSomJato(); // Para o som ao soltar
+});
+
+function update() {
+    if (!gameRunning) return;
+
+    let speed = keys['shift'] ? 3 : player.speed;
+    if (keys['w']) player.y -= speed; if (keys['s']) player.y += speed;
+    if (keys['a']) player.x -= speed; if (keys['d']) player.x += speed;
+    player.angle = Math.atan2(mousePos.y - player.y, mousePos.x - player.x);
+    
+    if(player.x - player.r < 0 || player.x + player.r > canvas.width ||
+       player.y - player.r < 0 || player.y + player.r > canvas.height){
+        processarMorte();
+    }
+
+    if(powerUpTimer > 0) powerUpTimer--;
+    else activePowerUp = null;
+
+    if(missions.survival.active) {
+        missions.survival.current = (Date.now() - survivalStartTime) / 1000;
+        if(missions.survival.current >= missions.survival.goal) completarMissao('survival');
+    }
+
+    floatingTexts.forEach((t, i) => {
+        t.yOffset -= 1;
+        t.alpha -= 0.01;
+        if(t.alpha <= 0) floatingTexts.splice(i, 1);
+    });
+
+    powerUps.forEach((p, i) => {
+        if(Math.hypot(player.x - p.x, player.y - p.y) < player.r + p.r) {
+            aplicarPowerUp(p.tipo);
+            powerUps.splice(i, 1);
+            playSound(audioHit); 
+        }
+    });
+
+    bots.forEach(bot => {
+        if (!bot.alive) return;
+        let ang = Math.atan2(player.y - bot.y, player.x - bot.x);
+        bot.x += Math.cos(ang) * bot.speed;
+        bot.y += Math.sin(ang) * bot.speed;
+
+        if(Date.now() - bot.lastShot > 2000) {
+            disparar(bot, player.x, player.y, 'bot');
+            bot.lastShot = Date.now();
+        }
+    });
+
+    bullets.forEach((b, i) => {
+        b.x += b.vx; b.y += b.vy;
+        bots.forEach(bot => {
+            if(bot.alive && b.owner === 'player' && Math.hypot(b.x - bot.x, b.y - bot.y) < bot.r + 10) {
+                bot.hp--;
+                criarParticulas(b.x, b.y, b.color);
+                playSound(audioHit);
+                bullets.splice(i, 1);
+                if(bot.hp <= 0){
+                    bot.alive = false;
+                    missions.kills.current++;
+                    if(Math.random() < 0.3) spawnPowerUp(bot.x, bot.y);
+                    playerGold += 50; 
+                    atualizarUI();
+                    criarMancha(bot.x, bot.y, "red");
+                }
+            }
+        });
+        if(b.owner === 'bot' && Math.hypot(b.x - player.x, b.y - player.y) < player.r) {
+            bullets.splice(i, 1);
+            processarMorte();
+        }
+    });
+
+    if (bots.length > 0 && bots.every(b => !b.alive)) {
+        level++;
+        playerGold += 200; 
+        atualizarUI();
+        spawnWave();
+    }
+
+    particles.forEach((p, i) => {
+        p.x += p.vx; p.y += p.vy;
+        p.life -= 0.02;
+        if(p.life <= 0) particles.splice(i, 1);
+    });
+}
+
+function processarMorte() {
+    playerLives--;
+    atualizarCoracoes();
+    if (playerLives > 0) {
+        player.x = 150;
+        player.y = canvas.height / 2;
+        criarParticulas(player.x, player.y, "#ff0000");
+    } else {
+        gameRunning = false;
+        document.getElementById('continueModal').style.display = 'flex';
+    }
+}
+
+function reviverJogador() {
+    playerLives = 10; 
+    atualizarCoracoes();
+    document.getElementById('continueModal').style.display = 'none';
+    gameRunning = true;
+    player.x = 150; player.y = canvas.height / 2;
+    requestAnimationFrame(gameLoop);
+}
+
+function completarMissao(tipo) {
+    let m = missions[tipo];
+    if(!m.active) return;
+    playerGold += m.reward;
+    m.active = false;
+    criarTextoFlutuante(player.x, player.y - 40, "MISSÃO COMPLETA! +" + m.reward, "#ffd700");
+    playSound(audioBoss);
+    atualizarUI();
+}
+
+// --- 8. DESENHO ---
+function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    if (backgroundImg.complete) ctx.drawImage(backgroundImg, 0, 0, canvas.width, canvas.height);
+    ctx.drawImage(paintCanvas, 0, 0);
+
+    powerUps.forEach(p => {
+        ctx.fillStyle = p.color;
+        ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2); ctx.fill();
+    });
+
+    bots.forEach(bot => {
+        if (!bot.alive) return;
+        ctx.save();
+        ctx.translate(bot.x, bot.y);
+        ctx.rotate(Math.atan2(player.y - bot.y, player.x - bot.x));
+        if (botSprite.complete) {
+            ctx.drawImage(botSprite, -bot.r, -bot.r, bot.r * 2, bot.r * 2);
+        }
+        ctx.restore();
+    });
+
+    // --- PERSONAGEM COM PROPULSÃO ---
+    ctx.save();
+    ctx.translate(player.x, player.y);
+    
+    // Efeito de flutuar
+    let flutuar = Math.sin(Date.now() * 0.005) * 15;
+
+    // 1. DESENHO DO JATO NAS COSTAS (Propulsão)
+    if (keys['w'] || keys['s'] || keys['a'] || keys['d']) {
+        ctx.save();
+        // O jato fica oposto ao ângulo do mouse
+        ctx.rotate(player.angle);
+        ctx.fillStyle = "#ffaa00";
+        ctx.shadowBlur = 20;
+        ctx.shadowColor = "#ff5500";
+        for(let i=0; i<5; i++) {
+            ctx.beginPath();
+            // Pequenas bolinhas de fogo saindo das "costas"
+            ctx.arc(-player.r + Math.random()*10, (Math.random()-0.5)*20, 8, 0, Math.PI*2);
+            ctx.fill();
+        }
+        ctx.restore();
+    }
+
+    ctx.rotate(player.angle);
+    if (Math.abs(player.angle) > Math.PI / 2) ctx.scale(1, -1);
+
+    if (playerImg.complete) {
+        ctx.drawImage(playerImg, -player.r, -player.r + flutuar, player.r * 2, player.r * 2);
+    } else {
+        ctx.fillStyle = player.color;
+        ctx.beginPath(); ctx.arc(0, flutuar, player.r, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.restore();
+
+    bullets.forEach(b => {
+        ctx.fillStyle = b.color;
+        ctx.beginPath(); ctx.arc(b.x, b.y, 5, 0, Math.PI*2); ctx.fill();
+    });
+
+    ctx.fillStyle = "white"; ctx.font = "14px Orbitron";
+    ctx.fillText("NÍVEL: " + level, 30, 50);
+    document.getElementById('ammoTxt').innerText = player.ammo;
+}
+
+function gameLoop() {
+    if (!gameRunning) return;
+    update();
+    draw();
+    requestAnimationFrame(gameLoop);
+}
+
+window.addEventListener("keydown", e => keys[e.key.toLowerCase()] = true);
+window.addEventListener("keyup", e => keys[e.key.toLowerCase()] = false);
+canvas.addEventListener("mousemove", e => { mousePos.x = e.clientX; mousePos.y = e.clientY; });
+
+canvas.addEventListener("mousedown", () => {
+    if(player.ammo > 0 && gameRunning){
+        disparar(player, mousePos.x, mousePos.y, 'player');
+        player.ammo--;
+        playSound(audioShot);
+    } else if (gameRunning) {
+        player.ammo = player.maxAmmo;
+    }
+});
+
+window.addEventListener('resize', resizeCanvas);
+
+let playerGold = 1500;
+let playerGems = 50;
+
+function atualizarUI() {
+    const currencyBar = document.querySelector('.currency-bar');
+    if(currencyBar) currencyBar.innerHTML = `<span style="color:#ffd700">💰 ${playerGold}</span> <span style="color:#00ffcc">💎 ${playerGems}</span>`;
+}
+
+function atualizarCoracoes() {
+    const container = document.getElementById('heartContainer');
+    if(!container) return;
+    container.innerHTML = "❤️".repeat(playerLives);
+}
+
+function spawnPowerUp(x, y) {
+    const tipos = ['vida', 'ouro', 'laser', 'multishot'];
+    const tipo = tipos[Math.floor(Math.random() * tipos.length)];
+    powerUps.push({ x: x, y: y, tipo: tipo, r: 15, color: "#fff" });
+}
+
+function aplicarPowerUp(tipo) {
+    if (tipo === 'vida' && playerLives < 10) { playerLives++; atualizarCoracoes(); }
+    if (tipo === 'ouro') { playerGold += 500; atualizarUI(); }
+}
+</script>
+
+
+   
+</body>
+</html>

@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>War Captain | Battle Tactics</title>
+    <style>
+        body, html { margin:0; padding:0; height:100%; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:#1a1a1a; overflow:hidden; color: white; }
+        #gameContainer { position: relative; width:100%; height:100%; background: #2e7d32; display:flex; flex-direction:column; }
+        
+        #topBar { width:100%; display:flex; justify-content:space-between; padding:15px; background: rgba(0,0,0,0.5); box-sizing: border-box; }
+        #manaBar { width: 200px; height: 20px; background: #444; border: 2px solid #fff; border-radius: 10px; overflow: hidden; }
+        #manaFill { width: 0%; height: 100%; background: #2196F3; transition: width 0.1s; }
+
+        #battlefield { flex:1; display:flex; flex-direction: column; cursor: crosshair; }
+        .lane { flex:1; border-bottom: 2px dashed rgba(255,255,255,0.2); position: relative; display: flex; align-items: center; }
+        .lane:hover { background: rgba(255,255,255,0.05); }
+
+        .unit { width:45px; height:45px; border-radius:8px; position:absolute; display:flex; align-items:center; justify-content:center; font-weight:bold; font-size: 12px; transition: transform 0.2s; border: 2px solid rgba(0,0,0,0.3); }
+        .playerUnit { background:#2196F3; z-index: 10; }
+        .enemyUnit { background:#f44336; }
+        .hp-bar { position: absolute; top: -10px; width: 100%; height: 5px; background: red; }
+        .hp-fill { height: 100%; background: #4CAF50; }
+
+        #bottomHUD { height:120px; background:rgba(0,0,0,0.8); display:flex; justify-content:center; align-items:center; gap:15px; }
+        .card { width:90px; height:90px; background:#333; border: 2px solid #555; border-radius:10px; display:flex; flex-direction:column; align-items:center; justify-content:center; cursor:pointer; transition: 0.2s; }
+        .card.selected { border-color: #FFD700; background: #444; transform: scale(1.1); }
+        .card span { font-size: 10px; margin-top: 5px; color: #aaa; }
+    </style>
+</head>
+<body>
+
+<div id="gameContainer">
+    <div id="topBar">
+        <div>Mana: <div id="manaBar"><div id="manaFill"></div></div></div>
+        <div id="timer">Tempo: 02:00</div>
+        <div id="score">Capturas: 0</div>
+    </div>
+
+    <div id="battlefield">
+        <div class="lane" data-lane="0" onclick="placeUnit(0)"></div>
+        <div class="lane" data-lane="1" onclick="placeUnit(1)"></div>
+        <div class="lane" data-lane="2" onclick="placeUnit(2)"></div>
+    </div>
+
+    <div id="bottomHUD">
+        <div class="card" id="card-arqueiro" onclick="selectUnit('arqueiro')">Arqueiro <span>3 Mana</span></div>
+        <div class="card" id="card-espadachim" onclick="selectUnit('espadachim')">Espada <span>4 Mana</span></div>
+        <div class="card" id="card-lanceiro" onclick="selectUnit('lanceiro')">Lança <span>2 Mana</span></div>
+    </div>
+</div>
+
+<script>
+// --- CONFIGURAÇÕES DO REINO DE LEÔNIDAS ---
+const evolucoes = {
+    arqueiro:   ["Recruta Arqueiro", "Besta de Esparta", "Apolo de Elite"],
+    espadachim: ["Escravo Espadachim", "Guerreiro de Leônidas", "Campeão do Olimpo"],
+    lanceiro:   ["Jovem Lanceiro", "Hoplita Imortal", "Lança de Zeus"]
+};
+
+// Carregar troféus do navegador ou começar com 0
+let trofeus = parseInt(localStorage.getItem('trofeus')) || 0;
+let nivelEvolucao = 0; // 0: Inicial, 1: Evoluído, 2: Lendário
+
+const unitStats = {
+    arqueiro:   { cost: 3, hp: 60, atk: 15, speed: 0.8, beats: 'lanceiro' },
+    espadachim: { cost: 4, hp: 120, atk: 12, speed: 0.6, beats: 'arqueiro' },
+    lanceiro:   { cost: 2, hp: 90, atk: 10, speed: 0.7, beats: 'espadachim' }
+};
+
+let mana = 5;
+let selectedType = null;
+let units = [];
+let gameActive = true;
+
+// UI Inicial
+document.getElementById('score').innerHTML = `🏆 Troféus: ${trofeus}`;
+
+function selectUnit(type) {
+    selectedType = type;
+    document.querySelectorAll('.card').forEach(c => c.classList.remove('selected'));
+    document.getElementById(`card-${type}`).classList.add('selected');
+}
+
+function placeUnit(laneIdx) {
+    if (!selectedType || !gameActive) return;
+    const stats = unitStats[selectedType];
+    if (mana >= stats.cost) {
+        mana -= stats.cost;
+        createUnit(selectedType, laneIdx, 'player');
+    }
+}
+
+function createUnit(type, lane, owner) {
+    const stats = unitStats[type];
+    const el = document.createElement('div');
+    el.className = `unit ${owner}Unit`;
+    
+    // Define o nome baseado no nível de evolução atual
+    // Se o jogador tiver mais troféus, a unidade nasce mais forte!
+    nivelEvolucao = Math.min(2, Math.floor(trofeus / 100)); 
+    const nomeUnidade = owner === 'player' ? evolucoes[type][nivelEvolucao] : type.toUpperCase();
+    const bonusAtk = owner === 'player' ? nivelEvolucao * 5 : 0;
+
+    el.innerHTML = `<div class="hp-bar"><div class="hp-fill" style="width:100%"></div></div>
+                    <span style="font-size:8px; position:absolute; top:45px; white-space:nowrap">${nomeUnidade}</span>
+                    ${type[0].toUpperCase()}`;
+    
+    const obj = {
+        element: el,
+        type: type,
+        lane: lane,
+        owner: owner,
+        pos: owner === 'player' ? 2 : 95,
+        hp: stats.hp + (bonusAtk * 2), // Unidades evoluídas têm mais HP
+        maxHp: stats.hp + (bonusAtk * 2),
+        atk: stats.atk + bonusAtk,
+        speed: owner === 'player' ? stats.speed : -stats.speed
+    };
+
+    document.querySelectorAll('.lane')[lane].appendChild(el);
+    units.push(obj);
+}
+
+// IA Inimiga
+setInterval(() => {
+    if (!gameActive) return;
+    const types = ['arqueiro', 'espadachim', 'lanceiro'];
+    createUnit(types[Math.floor(Math.random() * 3)], Math.floor(Math.random() * 3), 'enemy');
+}, 3500);
+
+function update() {
+    if (!gameActive) return;
+
+    if (mana < 10) mana += 0.02;
+    document.getElementById('manaFill').style.width = (mana * 10) + '%';
+
+    units.forEach((u, i) => {
+        let collision = false;
+        units.forEach(target => {
+            if (u.owner !== target.owner && u.lane === target.lane) {
+                const dist = Math.abs(u.pos - target.pos);
+                if (dist < 5) {
+                    collision = true;
+                    let damage = u.atk;
+                    if (unitStats[u.type].beats === target.type) damage *= 1.5;
+                    target.hp -= damage / 10; 
+                    target.element.querySelector('.hp-fill').style.width = (target.hp / target.maxHp) * 100 + '%';
+                }
+            }
+        });
+
+        if (!collision) {
+            u.pos += u.speed;
+            u.element.style.left = u.pos + '%';
+        }
+
+        if (u.hp <= 0) {
+            u.element.remove();
+            units.splice(i, 1);
+        }
+
+        // --- SISTEMA DE TROFÉUS E VITÓRIA ---
+        if (u.owner === 'player' && u.pos >= 98) {
+            gameActive = false;
+            trofeus += 30;
+            localStorage.setItem('trofeus', trofeus);
+            alert(`VITÓRIA ESPARTANA! +30 Troféus. Total: ${trofeus}`);
+            location.reload();
+        } else if (u.owner === 'enemy' && u.pos <= 2) {
+            gameActive = false;
+            trofeus = Math.max(0, trofeus - 20); // Perde troféus na derrota
+            localStorage.setItem('trofeus', trofeus);
+            alert(`DERROTA! O Reino caiu. -20 Troféus. Total: ${trofeus}`);
+            location.reload();
+        }
+    });
+
+    requestAnimationFrame(update);
+}
+update();
+</script>
+</body>
+</html>
